@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NUL Systems — Fleet Control Center</title>
+<meta name="description" content="NUL Systems Fleet Control Center: the dispatch and governance layer for non-tactical vehicle fleets. Every vehicle movement authorized against policy before it executes.">
+<meta name="author" content="NUL Systems, a product of Delphi Insights, LLC">
+<meta property="og:title" content="NUL Systems — Fleet Control Center">
+<meta property="og:site_name" content="NUL Systems">
+<meta property="og:url" content="https://nulsystems.com/roads">
+<link rel="canonical" href="https://nulsystems.com/roads">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpolygon points='50,8 88,30 50,52 12,30' fill='%23F5A623'/%3E%3Cpolygon points='88,30 88,70 50,92 50,52' fill='%23E8601C'/%3E%3Cpolygon points='12,30 50,52 50,92 12,70' fill='%232B7DD6'/%3E%3C/svg%3E">
+<style>
+:root{
+  --bg:#F4F6FA; --panel:#FFFFFF; --ink:#0F1623; --mute:#5B6B82; --faint:#8B97A8;
+  --line:#E3E8F0; --navy:#1F2A44; --blue:#2B7DD6; --orange:#E8601C;
+  --green:#1F9D6B; --greenbg:#E7F6EF; --amber:#C8860A; --amberbg:#FBF1DC;
+  --red:#C8413B; --redbg:#FBE9E8; --sidebar:#0E1422;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  background:var(--bg);color:var(--ink);display:flex;height:100vh;overflow:hidden;font-size:14px}
+
+/* SIDEBAR */
+.sidebar{width:248px;background:var(--sidebar);color:#C7D1DF;display:flex;flex-direction:column;flex-shrink:0}
+.brand{display:flex;align-items:center;gap:10px;padding:18px 18px 14px}
+.cube{width:30px;height:30px;flex-shrink:0}
+.brand .nm{font-weight:700;color:#fff;font-size:16px;letter-spacing:.5px}
+.persona{margin:6px 14px 14px;padding:12px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.07);border-radius:10px}
+.persona .role{font-weight:700;color:#fff;font-size:13px}
+.persona .sub{color:#8B97A8;font-size:11px;margin-top:3px;line-height:1.35}
+.nav{flex:1;padding:6px 10px;overflow:auto}
+.nav a{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:8px;color:#AEB9C9;
+  text-decoration:none;font-size:13.5px;cursor:pointer;margin-bottom:2px}
+.nav a:hover{background:rgba(255,255,255,.05);color:#fff}
+.nav a.active{background:var(--orange);color:#fff;font-weight:600}
+.nav a .ico{width:17px;height:17px;flex-shrink:0;opacity:.9}
+.who{padding:13px 16px;border-top:1px solid rgba(255,255,255,.08);display:flex;align-items:center;gap:10px}
+.avatar{width:32px;height:32px;border-radius:50%;background:var(--blue);color:#fff;display:flex;align-items:center;
+  justify-content:center;font-weight:700;font-size:12px;flex-shrink:0}
+.who .nm{color:#fff;font-size:12.5px;font-weight:600}
+.who .sub{color:#8B97A8;font-size:11px}
+
+/* MAIN */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.topbar{height:54px;background:var(--panel);border-bottom:1px solid var(--line);display:flex;align-items:center;
+  padding:0 22px;gap:14px;flex-shrink:0}
+.badge{display:inline-flex;align-items:center;gap:7px;background:#EAF1FB;color:var(--blue);
+  font-size:11px;font-weight:700;padding:5px 10px;border-radius:20px;letter-spacing:.3px}
+.badge .dot{width:7px;height:7px;border-radius:50%;background:var(--green)}
+.search{flex:1;max-width:420px;background:var(--bg);border:1px solid var(--line);border-radius:8px;
+  padding:8px 12px;color:var(--faint);font-size:12.5px}
+.env{margin-left:auto;font-size:11px;color:var(--faint);font-weight:600}
+.content{flex:1;overflow:auto;padding:24px 28px}
+.view{display:none}
+.view.active{display:block}
+.h1{font-size:21px;font-weight:700;display:flex;align-items:center;gap:10px}
+.h1 .ti{width:22px;height:22px}
+.sub{color:var(--mute);font-size:13px;margin-top:4px;margin-bottom:20px}
+
+/* TILES */
+.tiles{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:22px}
+.tile{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px}
+.tile .lab{font-size:11px;color:var(--faint);font-weight:600;text-transform:uppercase;letter-spacing:.4px;
+  display:flex;align-items:center;justify-content:space-between}
+.tile .val{font-size:30px;font-weight:800;margin-top:8px;font-variant-numeric:tabular-nums}
+.tile .cap{font-size:11px;color:var(--mute);margin-top:3px}
+.tile .ico{width:15px;height:15px;opacity:.55}
+
+.cols{display:grid;grid-template-columns:1.55fr 1fr;gap:18px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.card .hd{padding:14px 16px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between}
+.card .hd .t{font-weight:700;font-size:14px}
+.card .hd .d{font-size:11px;color:var(--faint);margin-top:2px}
+.card .hd .lnk{font-size:11px;color:var(--blue);font-weight:600;cursor:pointer}
+.card .bd{padding:6px 16px 14px}
+
+/* DECISION ROWS */
+.row{display:flex;align-items:center;gap:12px;padding:12px 4px;border-bottom:1px solid var(--line)}
+.row:last-child{border-bottom:none}
+.pill{font-size:10.5px;font-weight:800;padding:4px 9px;border-radius:6px;letter-spacing:.4px;flex-shrink:0;width:64px;text-align:center}
+.allow{background:var(--greenbg);color:var(--green)}
+.block{background:var(--redbg);color:var(--red)}
+.review{background:var(--amberbg);color:var(--amber)}
+.row .veh{font-weight:700;font-size:13px;font-variant-numeric:tabular-nums}
+.row .meta{font-size:11.5px;color:var(--mute);margin-top:2px}
+.row .rt{margin-left:auto;text-align:right;flex-shrink:0}
+.row .rt .conf{font-size:13px;font-weight:700;font-variant-numeric:tabular-nums}
+.row .rt .tm{font-size:10.5px;color:var(--faint)}
+
+.feed{max-height:none}
+.feeditem{display:flex;gap:10px;padding:10px 4px;border-bottom:1px solid var(--line);font-size:12px}
+.feeditem:last-child{border:none}
+.feeditem .fdot{width:8px;height:8px;border-radius:50%;margin-top:5px;flex-shrink:0}
+.feeditem .ft{color:var(--mute)}
+.feeditem .ft b{color:var(--ink)}
+.feeditem .fz{color:var(--faint);font-size:10.5px;margin-top:2px}
+
+.btn{background:var(--orange);color:#fff;border:none;border-radius:8px;padding:9px 16px;font-weight:700;
+  font-size:12.5px;cursor:pointer;display:inline-flex;align-items:center;gap:8px}
+.btn:hover{filter:brightness(1.07)}
+.btn.ghost{background:#fff;color:var(--navy);border:1px solid var(--line)}
+
+/* POLICY STUDIO */
+.policy{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.rule{padding:13px;border:1px solid var(--line);border-radius:10px;margin-bottom:10px;background:#fff}
+.rule .rt2{font-weight:700;font-size:13px}
+.rule .rd{font-size:11.5px;color:var(--mute);margin-top:4px;line-height:1.4}
+.rule .tagrow{margin-top:8px;display:flex;gap:6px;flex-wrap:wrap}
+.rtag{font-size:10px;font-weight:700;padding:3px 8px;border-radius:5px;background:#EEF2F8;color:var(--mute)}
+.codebox{background:#0E1422;color:#C7D1DF;border-radius:10px;padding:14px;font-family:Consolas,Menlo,monospace;
+  font-size:12px;line-height:1.6;white-space:pre-wrap}
+.codebox .k{color:#E8601C}.codebox .s{color:#5BC98E}.codebox .c{color:#6B7890}
+
+/* AUDIT */
+table{width:100%;border-collapse:collapse}
+th{text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:.4px;color:var(--faint);
+  padding:10px 12px;border-bottom:1px solid var(--line)}
+td{padding:11px 12px;border-bottom:1px solid var(--line);font-size:12.5px;font-variant-numeric:tabular-nums}
+tr:hover td{background:#FAFBFD}
+.mono{font-family:Consolas,Menlo,monospace;font-size:11.5px;color:var(--mute)}
+
+.banner{background:linear-gradient(90deg,#1F2A44,#2B4570);color:#fff;border-radius:12px;padding:18px 20px;
+  margin-bottom:20px;display:flex;align-items:center;gap:18px}
+.banner .bi{width:34px;height:34px;flex-shrink:0}
+.banner .bt{font-weight:700;font-size:15px}
+.banner .bs{font-size:12px;color:#C7D1DF;margin-top:3px;line-height:1.4}
+.demoflag{margin-left:auto;font-size:10px;font-weight:700;color:#F5A623;border:1px solid #F5A623;
+  padding:4px 9px;border-radius:6px;letter-spacing:.4px}
+.empty{padding:28px;text-align:center;color:var(--faint);font-size:12.5px}
+.kpi-up{color:var(--green);font-weight:700}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <div class="brand">
+    <svg class="cube" viewBox="0 0 100 100"><polygon points="50,8 88,30 50,52 12,30" fill="#F5A623"/><polygon points="88,30 88,70 50,92 50,52" fill="#E8601C"/><polygon points="12,30 50,52 50,92 12,70" fill="#2B7DD6"/></svg>
+    <span class="nm">NUL</span>
+  </div>
+  <div class="persona">
+    <div class="role">Fleet Dispatch Officer</div>
+    <div class="sub">On-installation NTV coordination, dispatch authorization, policy enforcement</div>
+  </div>
+  <div class="nav" id="nav">
+    <a data-view="dash" class="active"><span class="ico">📊</span> Dashboard</a>
+    <a data-view="command"><span class="ico">🛰️</span> Command Center</a>
+    <a data-view="policy"><span class="ico">📜</span> Policy Studio</a>
+    <a data-view="queue"><span class="ico">📋</span> Review Queue</a>
+    <a data-view="audit"><span class="ico">🔎</span> Audit Explorer</a>
+    <a data-view="settings"><span class="ico">⚙️</span> Settings</a>
+  </div>
+  <div class="who">
+    <div class="avatar">DW</div>
+    <div><div class="nm">David Wilson</div><div class="sub">Fleet Dispatch Officer</div></div>
+  </div>
+  <div style="padding:10px 16px 14px;border-top:1px solid rgba(255,255,255,.08);font-size:10px;color:#5A6675;letter-spacing:.3px">
+    NUL SYSTEMS · A PRODUCT OF DELPHI INSIGHTS, LLC<br>nulsystems.com · delphiinsights.us
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div class="badge"><span class="dot"></span> NUL SYSTEMS · ROADS DEMO</div>
+    <div class="search">Search vehicles, dispatch requests, controls…</div>
+    <div class="env">Installation: FORT GREGG-ADAMS · NTV FLEET</div>
+  </div>
+
+  <div class="content">
+
+    <!-- DASHBOARD -->
+    <div class="view active" id="view-dash">
+      <div class="banner">
+        <svg class="bi" viewBox="0 0 100 100"><polygon points="50,8 88,30 50,52 12,30" fill="#F5A623"/><polygon points="88,30 88,70 50,92 50,52" fill="#E8601C"/><polygon points="12,30 50,52 50,92 12,70" fill="#2B7DD6"/></svg>
+        <div>
+          <div class="bt">NUL is the dispatch and governance layer for autonomous NTV fleets</div>
+          <div class="bs">Every vehicle movement is authorized against written policy before it executes. Allow, Block, or Review, with a full audit trail. NUL does not drive the vehicle; it governs whether the vehicle is cleared to move.</div>
+        </div>
+        <div class="demoflag">ILLUSTRATIVE DEMO</div>
+      </div>
+
+      <div class="tiles">
+        <div class="tile"><div class="lab">Dispatch Requests <span class="ico">📨</span></div><div class="val" id="t-total">0</div><div class="cap">Processed today</div></div>
+        <div class="tile"><div class="lab">Authorized <span class="ico">✅</span></div><div class="val" style="color:var(--green)" id="t-allow">0</div><div class="cap">Cleared to move</div></div>
+        <div class="tile"><div class="lab">Blocked <span class="ico">⛔</span></div><div class="val" style="color:var(--red)" id="t-block">0</div><div class="cap">Policy violation</div></div>
+        <div class="tile"><div class="lab">Human Review <span class="ico">⚠️</span></div><div class="val" style="color:var(--amber)" id="t-review">0</div><div class="cap">Escalated</div></div>
+        <div class="tile"><div class="lab">Fleet Utilization <span class="ico">📈</span></div><div class="val" id="t-util">11%</div><div class="cap"><span class="kpi-up">▲ target 35%</span></div></div>
+      </div>
+
+      <div class="cols">
+        <div class="card">
+          <div class="hd"><div><div class="t">Dispatch Decision History</div><div class="d">Recent authorization decisions. Open Audit Explorer for full detail.</div></div><div class="lnk" data-jump="audit">Open Audit Explorer ↗</div></div>
+          <div class="bd" id="dash-decisions"><div class="empty">No decisions yet. Run authorizations from Command Center.</div></div>
+        </div>
+        <div class="card">
+          <div class="hd"><div><div class="t">Live Feed</div><div class="d">Real-time dispatch events</div></div></div>
+          <div class="bd feed" id="dash-feed"><div class="empty">No recent activity.</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- COMMAND CENTER -->
+    <div class="view" id="view-command">
+      <div class="h1">🛰️ Command Center</div>
+      <div class="sub">Submit NTV dispatch requests. NUL evaluates each against fleet policy and returns a deterministic decision before the vehicle moves.</div>
+
+      <div style="display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap">
+        <button class="btn" id="runOne">▶ Process next dispatch request</button>
+        <button class="btn ghost" id="runBatch">▶▶ Process batch (8)</button>
+        <button class="btn ghost" id="reset">↺ Reset demo</button>
+      </div>
+
+      <div class="cols">
+        <div class="card">
+          <div class="hd"><div><div class="t">Incoming Dispatch Requests</div><div class="d">Queued NTV movement requests awaiting authorization</div></div></div>
+          <div class="bd" id="cmd-decisions"><div class="empty">Click “Process next dispatch request” to begin.</div></div>
+        </div>
+        <div class="card">
+          <div class="hd"><div><div class="t">Decision Velocity</div><div class="d">Authorizations this session</div></div></div>
+          <div class="bd">
+            <div style="display:flex;gap:14px;padding:14px 4px">
+              <div style="flex:1;text-align:center"><div style="font-size:26px;font-weight:800;color:var(--green)" id="v-allow">0</div><div style="font-size:11px;color:var(--mute)">Authorized</div></div>
+              <div style="flex:1;text-align:center"><div style="font-size:26px;font-weight:800;color:var(--red)" id="v-block">0</div><div style="font-size:11px;color:var(--mute)">Blocked</div></div>
+              <div style="flex:1;text-align:center"><div style="font-size:26px;font-weight:800;color:var(--amber)" id="v-review">0</div><div style="font-size:11px;color:var(--mute)">Review</div></div>
+            </div>
+            <div style="padding:10px 4px 4px;font-size:11.5px;color:var(--mute);border-top:1px solid var(--line)">
+              Average decision latency <b id="v-lat">— ms</b> · every decision written to the tamper-evident audit chain.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- POLICY STUDIO -->
+    <div class="view" id="view-policy">
+      <div class="h1">📜 Policy Studio</div>
+      <div class="sub">Written fleet policy, compiled into executable authorization logic. Edit the policy, and enforcement changes propagate instantly.</div>
+      <div class="policy">
+        <div>
+          <div class="rule"><div class="rt2">Operator certification required</div><div class="rd">Autonomous NTV may only dispatch if the assigned mission profile and safety-driver certification are current.</div><div class="tagrow"><span class="rtag">SAFETY</span><span class="rtag">BLOCK ON FAIL</span></div></div>
+          <div class="rule"><div class="rt2">Geofence and route restriction</div><div class="rd">Vehicle must remain within approved on-installation routes. Off-route or restricted-zone requests are blocked.</div><div class="tagrow"><span class="rtag">GEOFENCE</span><span class="rtag">BLOCK ON FAIL</span></div></div>
+          <div class="rule"><div class="rt2">Weather and visibility threshold</div><div class="rd">Autonomous dispatch escalates to human review when visibility drops below the policy threshold.</div><div class="tagrow"><span class="rtag">CONDITIONS</span><span class="rtag">REVIEW ON FAIL</span></div></div>
+          <div class="rule"><div class="rt2">Maintenance and readiness</div><div class="rd">Vehicles with an open maintenance flag or failed pre-trip inspection are blocked from dispatch.</div><div class="tagrow"><span class="rtag">READINESS</span><span class="rtag">BLOCK ON FAIL</span></div></div>
+        </div>
+        <div>
+          <div style="font-size:11px;color:var(--faint);font-weight:700;text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">Compiled enforcement logic</div>
+<div class="codebox"><span class="c"># NTV dispatch authorization — compiled from policy</span>
+<span class="k">rule</span> authorize_dispatch(request):
+  <span class="k">if</span> not request.operator_cert_current:
+      <span class="k">return</span> <span class="s">BLOCK</span>(<span class="s">"operator certification expired"</span>)
+  <span class="k">if</span> not request.route in approved_geofence:
+      <span class="k">return</span> <span class="s">BLOCK</span>(<span class="s">"route outside approved geofence"</span>)
+  <span class="k">if</span> request.visibility &lt; policy.min_visibility:
+      <span class="k">return</span> <span class="s">REVIEW</span>(<span class="s">"low visibility — human decision"</span>)
+  <span class="k">if</span> request.maint_flag_open:
+      <span class="k">return</span> <span class="s">BLOCK</span>(<span class="s">"open maintenance flag"</span>)
+  <span class="k">return</span> <span class="s">ALLOW</span>(audit=<span class="k">True</span>)</div>
+          <div style="font-size:11.5px;color:var(--mute);margin-top:12px">Nothing dispatches without passing through this layer. Every evaluation is logged with the rule and input that produced it.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- REVIEW QUEUE -->
+    <div class="view" id="view-queue">
+      <div class="h1">📋 Review Queue</div>
+      <div class="sub">Dispatch requests escalated to a human dispatch officer. These never auto-execute; a person decides.</div>
+      <div class="card"><div class="bd" id="queue-list"><div class="empty">No items in review. Escalations from Command Center appear here.</div></div></div>
+    </div>
+
+    <!-- AUDIT EXPLORER -->
+    <div class="view" id="view-audit">
+      <div class="h1">🔎 Audit Explorer</div>
+      <div class="sub">Tamper-evident record of every dispatch decision. This is the evidence layer the Department lacks today.</div>
+      <div class="card"><div class="bd" style="padding:0">
+        <table><thead><tr><th>Timestamp</th><th>Vehicle</th><th>Request</th><th>Decision</th><th>Rule fired</th><th>Hash</th></tr></thead>
+        <tbody id="audit-rows"><tr><td colspan="6" class="empty">No audit records yet. Run authorizations from Command Center.</td></tr></tbody></table>
+      </div></div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div class="view" id="view-settings">
+      <div class="h1">⚙️ Settings</div>
+      <div class="sub">Demo configuration.</div>
+      <div class="card"><div class="bd" style="padding:18px">
+        <div style="font-size:12.5px;color:var(--mute);line-height:1.6">
+          <b>Installation:</b> Fort Gregg-Adams (illustrative)<br>
+          <b>Fleet size:</b> 1,240 NTV (subset of the 150,000 DoW fleet)<br>
+          <b>Integration target:</b> dispatch/coordination layer above commercial AV stacks<br>
+          <b>Decision modes:</b> Allow · Block · Review<br>
+          <b>Audit:</b> tamper-evident chain, exportable for IG / oversight<br><br>
+          This is an illustrative demo built to mirror the NUL production dashboard, themed for the ROADS NTV use case. It shows the governance and dispatch layer only and does not represent a live autonomous vehicle.
+        </div>
+      </div></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ---- demo data: realistic NTV dispatch requests ----
+const REQUESTS = [
+  {veh:"NTV-0418", type:"Sedan",   task:"Personnel shuttle → Bldg 220", route:"R-2 (approved)", vis:"clear",   cert:true,  maint:false, conf:0.98},
+  {veh:"NTV-1107", type:"Cargo",   task:"MRE resupply → DFAC 3",        route:"R-7 (approved)", vis:"clear",   cert:true,  maint:false, conf:0.97},
+  {veh:"NTV-0931", type:"Cargo",   task:"Water haul → Range 12",        route:"R-12 RESTRICTED",vis:"clear",   cert:true,  maint:false, conf:0.94, force:"BLOCK", reason:"route outside approved geofence"},
+  {veh:"NTV-0567", type:"Sedan",   task:"Officer transport → HQ",       route:"R-1 (approved)", vis:"fog",     cert:true,  maint:false, conf:0.71, force:"REVIEW",reason:"low visibility — human decision"},
+  {veh:"NTV-0822", type:"Van",     task:"Mail run → Post Office",       route:"R-3 (approved)", vis:"clear",   cert:false, maint:false, conf:0.62, force:"BLOCK", reason:"operator certification expired"},
+  {veh:"NTV-1290", type:"Cargo",   task:"Parts delivery → Motor Pool",  route:"R-5 (approved)", vis:"clear",   cert:true,  maint:true,  conf:0.55, force:"BLOCK", reason:"open maintenance flag"},
+  {veh:"NTV-0143", type:"Sedan",   task:"Shuttle → Med Clinic",         route:"R-2 (approved)", vis:"light rain",cert:true, maint:false, conf:0.90},
+  {veh:"NTV-0705", type:"Van",     task:"Tool transport → Bldg 41",     route:"R-6 (approved)", vis:"dusk",    cert:true,  maint:false, conf:0.69, force:"REVIEW",reason:"reduced visibility — human decision"},
+  {veh:"NTV-1011", type:"Cargo",   task:"Supply run → Warehouse B",     route:"R-7 (approved)", vis:"clear",   cert:true,  maint:false, conf:0.96},
+  {veh:"NTV-0388", type:"Sedan",   task:"Personnel shuttle → Gym",      route:"R-4 (approved)", vis:"clear",   cert:true,  maint:false, conf:0.95}
+];
+
+let idx=0, stats={total:0,allow:0,block:0,review:0}, audit=[], queue=[], lats=[];
+const $=s=>document.querySelector(s), $$=s=>document.querySelectorAll(s);
+
+function decide(r){
+  if(r.force) return {d:r.force, reason:r.reason, rule:ruleFor(r.force,r.reason)};
+  return {d:"ALLOW", reason:"all policy checks passed", rule:"authorize_dispatch → ALLOW"};
+}
+function ruleFor(d,reason){
+  if(reason&&reason.includes("geofence")) return "geofence restriction";
+  if(reason&&reason.includes("certification")) return "operator certification";
+  if(reason&&reason.includes("maintenance")) return "maintenance readiness";
+  if(reason&&reason.includes("visibility")) return "weather/visibility threshold";
+  return "authorize_dispatch → ALLOW";
+}
+function pill(d){const c=d==="ALLOW"?"allow":d==="BLOCK"?"block":"review";const t=d==="ALLOW"?"AUTHORIZE":d;return `<span class="pill ${c}">${t}</span>`;}
+function hash(){return "0x"+Math.floor(Math.random()*0xfffffff).toString(16).padStart(7,"0");}
+function now(){const d=new Date();return d.toLocaleTimeString('en-US',{hour12:false});}
+
+function rowHTML(r,res){
+  return `<div class="row">${pill(res.d)}
+    <div><div class="veh">${r.veh} · ${r.type}</div><div class="meta">${r.task} · ${r.route} · vis: ${r.vis}</div>
+    <div class="meta" style="color:${res.d==='ALLOW'?'var(--green)':res.d==='BLOCK'?'var(--red)':'var(--amber)'}">${res.reason}</div></div>
+    <div class="rt"><div class="conf">${Math.round(r.conf*100)}%</div><div class="tm">confidence</div></div></div>`;
+}
+function feedHTML(r,res){
+  const c=res.d==='ALLOW'?'var(--green)':res.d==='BLOCK'?'var(--red)':'var(--amber)';
+  const verb=res.d==='ALLOW'?'authorized to dispatch':res.d==='BLOCK'?'blocked':'escalated to review';
+  return `<div class="feeditem"><div class="fdot" style="background:${c}"></div><div><div class="ft"><b>${r.veh}</b> ${verb}</div><div class="fz">${r.task} · ${now()}</div></div></div>`;
+}
+
+function processOne(){
+  if(idx>=REQUESTS.length){flash("All queued requests processed. Reset to run again.");return;}
+  const r=REQUESTS[idx++]; const res=decide(r);
+  const lat=8+Math.floor(Math.random()*22); lats.push(lat);
+  stats.total++; stats[res.d.toLowerCase()]++;
+  audit.unshift({t:now(),veh:r.veh,task:r.task,d:res.d,rule:res.rule,hash:hash()});
+  if(res.d==="REVIEW") queue.unshift({r,res});
+  // dashboard decisions
+  prepend("#dash-decisions", rowHTML(r,res));
+  prepend("#cmd-decisions", rowHTML(r,res));
+  prepend("#dash-feed", feedHTML(r,res));
+  render();
+}
+function prepend(sel,html){
+  const el=$(sel); if(el.querySelector(".empty")) el.innerHTML="";
+  el.insertAdjacentHTML("afterbegin",html);
+  // cap visible rows
+  while(el.children.length>7) el.removeChild(el.lastChild);
+}
+function render(){
+  $("#t-total").textContent=stats.total; $("#t-allow").textContent=stats.allow;
+  $("#t-block").textContent=stats.block; $("#t-review").textContent=stats.review;
+  const util=stats.total? Math.min(35, 11+Math.round(stats.allow/REQUESTS.length*28)) : 11;
+  $("#t-util").textContent=util+"%";
+  $("#v-allow").textContent=stats.allow; $("#v-block").textContent=stats.block; $("#v-review").textContent=stats.review;
+  $("#v-lat").textContent=(lats.length?Math.round(lats.reduce((a,b)=>a+b)/lats.length):0)+" ms";
+  // queue
+  if(queue.length){ $("#queue-list").innerHTML=queue.map(q=>`<div class="row"><span class="pill review">REVIEW</span>
+    <div><div class="veh">${q.r.veh} · ${q.r.type}</div><div class="meta">${q.r.task} · ${q.r.route}</div><div class="meta" style="color:var(--amber)">${q.res.reason}</div></div>
+    <div class="rt"><button class="btn ghost" style="padding:6px 10px;font-size:11px" onclick="this.closest('.row').style.opacity=.45;this.textContent='Decision logged'">Authorize manually</button></div></div>`).join(""); }
+  // audit
+  if(audit.length){ $("#audit-rows").innerHTML=audit.map(a=>`<tr><td class="mono">${a.t}</td><td><b>${a.veh}</b></td><td>${a.task}</td><td>${pill(a.d)}</td><td>${a.rule}</td><td class="mono">${a.hash}</td></tr>`).join(""); }
+}
+function flash(m){const b=$("#runOne");const o=b.textContent;b.textContent=m;setTimeout(()=>b.textContent=o,1600);}
+
+$("#runOne").onclick=processOne;
+$("#runBatch").onclick=()=>{let n=0;const iv=setInterval(()=>{processOne();if(++n>=8||idx>=REQUESTS.length)clearInterval(iv);},260);};
+$("#reset").onclick=()=>{idx=0;stats={total:0,allow:0,block:0,review:0};audit=[];queue=[];lats=[];
+  ["#dash-decisions","#cmd-decisions"].forEach(s=>$(s).innerHTML='<div class="empty">Click “Process next dispatch request” to begin.</div>');
+  $("#dash-feed").innerHTML='<div class="empty">No recent activity.</div>';
+  $("#queue-list").innerHTML='<div class="empty">No items in review.</div>';
+  $("#audit-rows").innerHTML='<tr><td colspan="6" class="empty">No audit records yet.</td></tr>';render();};
+
+// nav
+$$("#nav a").forEach(a=>a.onclick=()=>{
+  $$("#nav a").forEach(x=>x.classList.remove("active"));a.classList.add("active");
+  const v=a.dataset.view;$$(".view").forEach(x=>x.classList.remove("active"));$("#view-"+v).classList.add("active");
+});
+$$("[data-jump]").forEach(el=>el.onclick=()=>{const v=el.dataset.jump;document.querySelector(`#nav a[data-view="${v}"]`).click();});
+render();
+</script>
+</body>
+</html>
